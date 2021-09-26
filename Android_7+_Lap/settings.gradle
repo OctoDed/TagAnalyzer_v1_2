@@ -1,0 +1,2 @@
+rootProject.name = "Take_Img"
+include ':app'

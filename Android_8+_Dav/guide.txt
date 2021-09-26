@@ -1,0 +1,6 @@
+1) запустить ngrok
+./ngrok http://127.0.0.1:8000/
+2) вз€ть адрес который он выдал в терминале типа https://14c6f7298e6e.ngrok.io (— HTTPS)
+3) заменить им BASE_URL им в ServiceGenerator.java Android-приложени€
+4) добавить адрес в ALLOWED_HOSTS settings.py джанго-проекта
+python manage.py runserver
