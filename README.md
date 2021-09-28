@@ -6,6 +6,7 @@ Also paste this url in settings.py without "https://".
 
 To run server use "python3 manage.py runserver" in same folder
 
+
 Для запуска нгрока  в директории "/home/pavel/TagAnalyzer-main/Django_server/" используется команда "./ngrok http 8000",
 Затем ссылка по hhtps вставляется целиком в приложение (класс ServiseGenerator), а для самого сервера в файле settings.py  (без https).
 
