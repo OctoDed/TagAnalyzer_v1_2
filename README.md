@@ -10,3 +10,5 @@ To run server use "python3 manage.py runserver" in same folder
 Затем ссылка по hhtps вставляется целиком в приложение (класс ServiseGenerator), а для самого сервера в файле settings.py  (без https).
 
 Для запуска сервера в тойже директории выполняется команда "python3 manage.py runserver"
+
+Это тестовая ветка Серегй Давыденко!
