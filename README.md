@@ -11,4 +11,3 @@ To run server use "python3 manage.py runserver" in same folder
 
 Для запуска сервера в тойже директории выполняется команда "python3 manage.py runserver"
 
-Это тестовая ветка Серегй Давыденко!
