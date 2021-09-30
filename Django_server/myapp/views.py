@@ -26,54 +26,60 @@ import sklearn.model_selection
 import keras_ocr
 from IPython.display import clear_output
 import re
-
+from PIL import Image
 from Crypto.Cipher import AES
 import base64
 from base64 import b64encode
 
 @csrf_exempt 
 def upload_file(request):
-    #try:
-        up_file = request.FILES['picture']
-        path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/content/' + up_file.name
-        if os.path.exists(path):
-            os.remove(path)
-        destination = open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/content/' + up_file.name, 'xb+')
-        for chunk in up_file.chunks():
-            destination.write(chunk)
-        destination.close()
-        #os.system("python3 /home/sergey/GPO/for_django_3-0/content/YOLO_EasyOCR.py")
-        
-        #result = {'success': True, 'description': 'test', 'price': 12}
-        result = new_fun(path, up_file.name)
-        return JsonResponse(result)
-    #except Exception:
-    #    return HttpResponseBadRequest()
+    up_file = request.FILES['picture']
+    pathToPhoto = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/content/' + up_file.name
+    if os.path.exists(pathToPhoto):
+            os.remove(pathToPhoto)
+    destination = open(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/content/' + up_file.name, 'xb+')
+    for chunk in up_file.chunks():
+        destination.write(chunk)
+    destination.close()
     
-def new_fun(path, filename):
-    #file = open(path)
+    result = new_fun(pathToPhoto, up_file.name)
+    return JsonResponse(result)
+
+def convertFindedToTrain(size, box):
+    dw = 1./size[0]
+    dh = 1./size[1]
+    x = (box[0] + box[1])/2.0
+    y = (box[2] + box[3])/2.0
+    w = box[1] - box[0]
+    h = box[3] - box[2]
+    x = x*dw
+    w = w*dw
+    y = y*dh
+    h = h*dh
+    return (x,y,w,h)
+
+def new_fun(pathToPhoto, photoName):
     reader = easyocr.Reader(['ru','en']) # need to run only once to load model into memory
     # демонстрация работы
-    sdescriptions = []
-    sbarcodes = []
-    sprice11 = []
-    sprice12 = []
-    sprice21 = []
-    sprice22 = []
-    #os.system("cd /home/pavel/TagAnalyzer-main/Django_server/")
-    os.system("./content/darknet/darknet detector test ./content/data/obj.data ./content/data/yolov4-tiny-3l.cfg ./content/data/backup/yolov4-tiny-3l_fine_tuned.weights " + '"' + path + '"' + " -dont_show -ext_output | tee pred.txt")
-    #print(path)
-    #print(filename)
-    #print("./content/darknet/darknet detector test ./content/data/obj.data ./content/data/yolov4-tiny-3l.cfg ./content/data/backup/yolov4-tiny-3l_fine_tuned.weights " + '"' + path + '"' + " -dont_show -ext_output | tee pred.txt")
-    #filename = "photo(6).jpg"
-    a_file = open("pred.txt", "r")
-    lines = a_file.readlines()
-    a_file.close()
+    description = []
+    barcode = []
+    priceRubNoCard = []
+    priceKop = []
+    priceKopNoCard = []
+    priceRub = []
+    photoForTraining = Image.open(pathToPhoto)
+    width, height = photoForTraining.size
+    os.system("./content/darknet/darknet detector test ./content/data/obj.data ./content/data/yolov4-tiny-3l.cfg " + 
+    "./content/data/backup/yolov4-tiny-3l_fine_tuned.weights " + '"' + pathToPhoto + '"' + " -dont_show -ext_output | tee pred.txt")
+    predTxt = open("pred.txt", "r")
+    lines = predTxt.readlines()
+    predTxt.close()
     last_lines = [line for line in lines if ('width' in line and 'height' in line and 'left_x' in line)]
-    #clear_output()
-    img = cv2.imread("./content/"+filename)
-    #tuple(img.shape[1::-1])
+    clear_output()
+    img = cv2.imread("./content/"+photoName)
     res = []
+
+    f = open(photoName[:-4]+".txt", "w")
     for line in last_lines:
         spl = line.split()
         cords = {"class":spl[0][:-1], "conf_value":spl[1][:-1], "left_x":int(spl[3]), "top_y":int(spl[5]), 'width':int(spl[7]), 'height':int(spl[9][:-1])}
@@ -124,104 +130,82 @@ def new_fun(path, filename):
         if (x2 > img.shape[1]): x2 =img.shape[1]
         if (y > y2): y = y2
         if (x > x2): x = x2
+        if box['class'] == 'description': f.write("0 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n")
+        if box['class'] == 'barcode': f.write("1 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n")
+        if box['class'] == 'price11': f.write("2 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n")
+        if box['class'] == 'price12': f.write("5 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n") #по итогу сранения 3 и 5 поменял местами
+        if box['class'] == 'price21': f.write("4 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n")
+        if box['class'] == 'price22': f.write("3 "+str(convertFindedToTrain((width, height),(x,x+w,y,y+h)))[1:-1]+"\n")
         crop_img = img[y:y+h, x:x+w]
         apps = {
-                'description':sdescriptions.append,
-                'barcode':sbarcodes.append,
-                'price11':sprice11.append,
-                'price12':sprice12.append,
-                'price21':sprice21.append,
-                'price22':sprice22.append
+                'description':description.append,
+                'barcode':barcode.append,
+                'price11':priceRubNoCard.append,
+                'price12':priceKop.append,
+                'price21':priceKopNoCard.append,
+                'price22':priceRub.append
                 }
         apps[box['class']](crop_img)
-    os.remove("pred.txt")
-    f = open(filename[:-4]+".txt", "w")
+    #os.remove("pred.txt")
+    file1 = open(photoName[:-4]+"1.txt", "w")
     for line in last_lines:
-        f.write(line)
-    f.close()
+        file1.write(line)
+    file1.close()
     #os.remove("./predictions.jpg")
-    os.remove("./"+filename[:-4]+".txt")
-    
+    os.remove("./"+photoName[:-4]+"1.txt") #файл координат
+    f.close()
     #restxt = open('./content/res.txt', 'w')
-    text = ""
-    for img in sdescriptions:
+    answer = ""
+    for img in description:
         result = reader.readtext(img)
-        
         for box in result:
-            text = text + " " + box[1]
-        
-        #restxt.write(text + '\n')
-        #print(text)
-    description_test = text
-    text = ""
-    for img in sprice11:
-        #print(reader.readtext(img, allowlist='1234567890', detail = 0))
-        #restxt.write(str(reader.readtext(img, allowlist='1234567890', detail = 0))+ '\n')
+            answer = answer + " " + box[1]
+    descriptionAnswer = answer
+    answer = ""
+    for img in priceRubNoCard:
         result = reader.readtext(img, allowlist='1234567890')
         for box in result:
-            #text = text + " " + box[1]
-            text = text + box[1]
-        #restxt.write(text + '\n')
-    price11_test = text
-    text = ""
-    for img in sprice12:
-        #print(reader.readtext(img, allowlist='1234567890', detail = 0))
-        #restxt.write(reader.readtext(img, allowlist='1234567890', detail = 0)+ '\n')
+            answer = answer + box[1]
+    priceRubNoCardAnswer = answer
+    answer = ""
+    for img in priceKop:
         result = reader.readtext(img, allowlist='1234567890')
         for box in result:
-            #text = text + " " + box[1]
-            text = text + box[1]
-        #restxt.write(text + '\n')
-    price12_test = text
-    text = ""
-    for img in sprice22:
-        #print(reader.readtext(img, allowlist='1234567890', detail = 0))
-        #restxt.write(reader.readtext(img, allowlist='1234567890', detail = 0)+ '\n')
+            answer = answer + box[1]
+    priceKopAnswer = answer
+    answer = ""
+    for img in priceRub:
         result = reader.readtext(img, allowlist='1234567890')
         for box in result:
-            #text = text + " " + box[1]
-            text = text + box[1]
-        #restxt.write(text + '\n')
-    price21_test = text
-    text = ""
-    for img in sprice21:
-        #print(reader.readtext(img, allowlist='1234567890', detail = 0))
-        #restxt.write(reader.readtext(img, allowlist='1234567890', detail = 0)+ '\n')
+            answer = answer + box[1]
+    priceKopNoCardAnswer = answer
+    answer = ""
+    for img in priceKopNoCard:
         result = reader.readtext(img, allowlist='1234567890')
         for box in result:
-            #text = text + " " + box[1]
-            text = text + box[1]
-        #restxt.write(text + '\n')
-    price22_test = text
-    data = ""
-    for img in sbarcodes:
+            answer = answer + box[1]
+    priceRubAnswer = answer
+    barcodeData = ""
+    for img in barcode:
         decoded_objects = decode(img)
         for obj in decoded_objects:
-            # draw the barcode
-        #
-            #restxt.write("Type:" + obj.type + '\n')
-            #restxt.write("Data:" + obj.data + '\n')
-            #restxt.write("test")
-            data = str(obj.data)
-            #type = obj.type
-        #print("Type:", obj.type)
-        #print("Data:", obj.data)
-        
-    #restxt.close()
-    #price_per_num = []
-    #price_per_num.append(str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[0]))
-    #price_per_num.append(str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[1]))
-    #price_per_num.append(str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[2]))
+            barcodeData = str(obj.data)
     
-    price_num_card = str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[0])
-    price_num_nocard = str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[1])
-    price_Type = str(Price_per_Num(description_test, price11_test, price12_test, price21_test, price22_test)[2])
-    #result = {'success': True, 'description': encrypt(description_test), 'price11': encrypt(price11_test), 'price12': encrypt(price12_test), 'price21': encrypt(price21_test), 'price22': encrypt(price22_test), 'barcode_data': encrypt(data) }
-    result = {'success': True, 'description': description_test, 'price11': price11_test, 'price12': price12_test, 'price21': price21_test, 'price22': price22_test, 'barcode_data': data, 'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'Type': price_Type }
-    os.system("rm " + path)
+    price_num_card = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[0])
+    price_num_nocard = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[1])
+    price_Type = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[2])
+    try:
+        numType = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[3])
+    except (Exception):
+        numType = 'None found'
+    #result = {'success': True, 'description': encrypt(descriptionAnswer), 'price11': encrypt(priceRubNoCardAnswer), 'price12': encrypt(priceKopAnswer), 'price21': encrypt(priceKopNoCardAnswer), 'price22': encrypt(priceRubAnswer), 'barcode_data': encrypt(data) }
+    result = {'success': True, 'description': descriptionAnswer, 'price11': priceRubNoCardAnswer, 
+    'price12': priceKopAnswer, 'price21': priceKopNoCardAnswer, 'price22': priceRubAnswer, 'barcode_data': barcodeData,
+    'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'type': price_Type, 'numType': numType }
     print(result)
     return result
-    
+
+#шифрование
 def pad(byte_array):
     BLOCK_SIZE = 16
     pad_len = BLOCK_SIZE - len(byte_array) % BLOCK_SIZE
@@ -240,71 +224,61 @@ def encrypt(message1):
     ciphertext1 = obj.encrypt(padded)
     ct1 = base64.b64encode(ciphertext1).decode("UTF-8")
     return ct1
-    
-#def Price_per_Num(descryption, price11, price12, price21, price22):
-#    x = {'O':0, 'S':5, 'Z':2,'О':0,'б':6,'З':3}
-#    prices_per_num = []
-#    price_card = float(price11 + '.' + price12)
-#    price_nocard = float(price21 + '.' + price22)
-#    result2=re.findall(r'(?:(?:\d*\.{1})|(?:\d+\+))?\d+\s*(?:мл|шт|гр|L|литр(?:а|ов)?|кг|мг|г|пар(?:а|ы)?|пак|ш|Л|л)+', multiple_replace(descryption,x))
-#    if len(result2)!=0:
-#             #print(result2)
-#         #print('Число:',get_num_of_type(result2[0]), 'Единица:', get_type(result2[0]))
-#         num = get_num_of_type(result2[0])
-#         Type = get_type(result2[0])
-#         prices_per_num.append(str(price_card/num))
-#         prices_per_num.append(str(price_nocard/num))
-#         prices_per_num.append(Type)
-#    else:
-#         print("no metric")
 
-def Price_per_Num(descryption, price11, price12, price21, price22):
-    x = {'O':0, 'S':5, 'Z':2,'О':0,'б':6,'З':3}
+#вычисление цены за единицу
+def PricePerNum(descryption, price11, price12, price21, price22):
+    #словарь для замены букв в предложении на похожие цифры
+    dictLetterToNum = {'O':0, 'S':5, 'Б':5, 'Z':2,'О':0,'б':6,'З':3, ' ': ''}
     prices_per_num = []
-    price_nocard = float(price11 + '.' + price21)
-    price_card = float(price22 + '.' + price12)
-    result2=re.findall(r'(?:(?:\d*\.{1})|(?:\d+\+))?\d+\s*(?:мл|шт|гр|L|литр(?:а|ов)?|кг|мг|г|пар(?:а|ы)?|пак|ш|Л|л)+', multiple_replace(descryption,x))
-    if len(result2)!=0:
-         num=get_num_of_type(result2[-1])
-         Type = ''.join(get_type(result2[-1])[len(get_type(result2[-1]))-1])
-
-         if len(num)!=1:
-          num1=0
-          for i in num:
-            num1=num1+int(i)
-         else:
-          try: 
-            num1=int(num[0])
-          except Exception:
-            num1=float(num[0])
-         print("num " + str(num1))
-         print("Type " + str(Type))
-         print("price_card " + str(price_card))
-         print("price_nocard " + str(price_nocard))
-         print(descryption)
-         print(str(result2))
-         prices_per_num.append(str(round(price_card/num1, 4)))
-         prices_per_num.append(str(round(price_nocard/num1, 4)))
-         prices_per_num.append(str(Type))
-         
-         print("card " + str(prices_per_num[0]))
-         print("nocard " + str(prices_per_num[1]))
-         print("ctype " + str(prices_per_num[2]))
-         return (prices_per_num)
+    #регулярка, которая ищет цену в названии товара, предварительно буквы заменяются на цифры в соответствии со словарём,
+    #из названиря убираются все пробелы
+    priceValues=re.findall(
+        r'(?:(?:\d*\.{1})|(?:\d+\+)+)?\d+\s*(?:мл|шт|гр|L|литр(?:а|ов)?|кг|мг|г|пар(?:а|ы)?|пак|ш|Л|л)+', 
+        replaceLetterToNum(descryption,dictLetterToNum)
+    )
+    if len(priceValues)!=0: #определил хотя бы одну пару число/единица измерения
+        num=getNumOfType(priceValues[-1]) #берём последнее значение из списка для цены
+        type = getType(priceValues[-1]) #берём последнее значение для единицы
+        #type = ''.join(getType(priceValues[-1])[len(getType(priceValues[-1]))-1]) #wtf?
+        #обработка маркетологов 2+1
+        try: #если нашлась строка с плюсом, то делим и получаем значения из него, формируем новый список с ними
+            num=str(num[-1]).split('+')
+        except (Exception): #может исключения и не возникает но на всякий случай я сделал отлов
+            print("Faker")
+        if len(num)!=1: #если нашлось несколько значений (2+1 etc), т.е. результат разделения выше
+            finalNum=0 #начальная сумма 0
+            for i in num:
+                finalNum=finalNum+int(i) #суммируем
+        else: #значение всего одно, его и берём (если это десятичное число, то переводим в него)
+            try: 
+                finalNum=int(num[0])
+            except Exception:
+                finalNum=float(num[0])
+        #вычисление значений цен
+        try:
+            priceNoCard = float(price11 + '.' + price21)
+            priceCard = float(price22 + '.' + price12)
+            prices_per_num.append(str(round(priceCard/finalNum, 4))) #цена по карте/единица
+            prices_per_num.append(str(round(priceNoCard/finalNum, 4))) #цена без карты/единица
+            prices_per_num.append(str(type)) #единицы измерения
+            prices_per_num.append(str(priceValues[-1])) #цена вместе с единицей
+        except (Exception): #при делении на ноль осознаём, что нейронка ошиблась и пишем, что метрики не найдены
+            for i in range(1,4):
+                prices_per_num.append("no metric")
+        return (prices_per_num)
                  
-    else:
-         prices_per_num.append("no metric")
-         prices_per_num.append("no metric")
-         prices_per_num.append("no metric")
-         return (prices_per_num)
+    else: #нейронка не нашла читаемых единиц, пишем, что метрики не найдены
+        for i in range(1,4):
+                prices_per_num.append("no metric")
+        return (prices_per_num)
 
-def get_num_of_type(string_to_split):
-    return(re.findall(r'(?:\d*\.{1})?\d+\s*', string_to_split))
+def getNumOfType(targetString):
+    return(re.findall(r'(?:(?:\d*\.{1})|(?:\d+\+)+)?\d+', targetString))
 
-def get_type(string_to_split):
-    return(re.findall(r'(?:мл|шт|гр|L|литр(?:а|ов)?|кг|мг|г|пар(?:а|ы)?|пак|ш|Л)+', string_to_split))
+def getType(targetString):
+    return(re.findall(r'(?:мл|шт|гр|L|литр(?:а|ов)?|кг|мг|г|пар(?:а|ы)?|пак|ш|Л|л)+', targetString))
     
-def multiple_replace(target_str, replace_values):
+def replaceLetterToNum(targetString, replace_values):
     for key in replace_values.keys():
-      target_str = target_str.replace(key, str(replace_values[key]))
-    return target_str
+      targetString = targetString.replace(key, str(replace_values[key]))
+    return targetString
