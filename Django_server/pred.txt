@@ -1,0 +1,20 @@
+ GPU isn't used 
+mini_batch = 1, batch = 16, time_steps = 1, train = 0 
+nms_kind: greedynms (1), beta = 0.600000 
+nms_kind: greedynms (1), beta = 0.600000 
+nms_kind: greedynms (1), beta = 0.600000 
+
+ seen 64, trained: 96 K-images (1 Kilo-batches_64) 
+ Detection layer: 30 - type = 28 
+ Detection layer: 37 - type = 28 
+ Detection layer: 44 - type = 28 
+/home/sergey/TagAnalyzer_v1_2/Django_server/content/qFB2kORhVWo.jpg: Predicted in 1793.265000 milli-seconds.
+description: 36%	(left_x:  -16   top_y:  -26   width:  569   height:  217)
+price21: 38%	(left_x:   30   top_y:  873   width:  288   height:  196)
+description: 96%	(left_x:  102   top_y:  352   width:  459   height:  176)
+price11: 95%	(left_x:  144   top_y:  714   width:   82   height:   44)
+barcode: 99%	(left_x:  145   top_y:  539   width:  235   height:  101)
+price22: 86%	(left_x:  236   top_y:  700   width:   49   height:   28)
+description: 30%	(left_x:  266   top_y:  -11   width:  515   height:  180)
+price21: 99%	(left_x:  375   top_y:  772   width:  121   height:   61)
+price12: 79%	(left_x:  513   top_y:  755   width:   60   height:   53)
