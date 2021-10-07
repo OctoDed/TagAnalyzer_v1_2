@@ -6,21 +6,32 @@ from pip._vendor import requests
 from tkinter import filedialog
 from tkinter import scrolledtext  
 from tkinter.filedialog import askopenfilename
-from PIL import Image
+from PIL import ImageTk, Image
+from tkinter import filedialog
 
 
 def clicked():  
     global url 
     url = txt.get()
     print(url)
+
 def ChosePicture():  
     global filename
     filename1 = askopenfilename()
     filename2 = Path(filename1).resolve()
     filename =str(filename2)
+
+    img = Image.open(filename2)
+    img = img.resize((250, 250), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(img)
+    #img = ImageTk.PhotoImage(Image.open(filename2))
     
-    #img = Image.open(filename2)
-    #img.save('tmp.png')
+    picture = Label(window, image = img)
+    picture.grid(column=2, row=5)
+    picture.image = img
+    #picture.configure(image=img1)
+    window.update()
+
 def magic():
     txt1.delete(1.0, END)
     files = {
@@ -40,6 +51,7 @@ def magic():
     #picture.grid(column=2, row=5)
     #picture.configure(image=img1)
     #window.update()
+
 window = Tk()
 window.title("Отдыхаем от телефонов")
 window.geometry('800x600')
