@@ -2,7 +2,8 @@ from tkinter import *
 import json
 import os
 from pathlib import Path
-from pip._vendor import requests
+#from pip._vendor import requests
+import requests
 from tkinter import filedialog
 from tkinter import scrolledtext  
 from tkinter.filedialog import askopenfilename
