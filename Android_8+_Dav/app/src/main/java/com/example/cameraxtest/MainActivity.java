@@ -260,7 +260,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     String barcode = result.get("barcode_data").getAsString();
                     String price_num_card = result.get("price_num_card").getAsString();
                     String price_num_nocard = result.get("price_num_nocard").getAsString();
-                    String Type = result.get("Type").getAsString();
+                    String Type = result.get("type").getAsString();
+                    String numType = result.get("numType").getAsString();
                     /*
                     tw.setText("Описание: " + decrypt(description) + '\n' + "Цена без карты: " +
                             decrypt(price11) + '.' + decrypt(price21) + '\n' + "Цена по карте: " +
@@ -274,7 +275,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             price22 + '.' + price12 + '\n' + "Штрих-код: " +
                             barcode + '\n' + "Цена за ед, карта: " +
                             price_num_card + '\n' + "Цена за ед, без карты: " +
-                            price_num_nocard + '\n' + "Ед. измерения: " + Type);
+                            price_num_nocard + '\n' + "Ед. измерения: " + Type + '\n' +
+                            "Количество: " + numType);
                 }
                 @Override
                 public void onFailure(Call<JsonObject> call, Throwable t) {

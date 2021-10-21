@@ -14,7 +14,7 @@ public class ServiceGenerator {
             .writeTimeout(2, TimeUnit.MINUTES)
             .build();
 
-    private static final String BASE_URL = "https://502d-5-165-212-88.ngrok.io";
+    private static final String BASE_URL = "https://16a9-88-204-72-142.ngrok.io";
 
     private static Retrofit.Builder builder =
             new Retrofit.Builder()
