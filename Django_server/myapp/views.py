@@ -29,7 +29,9 @@ import re
 from PIL import Image
 from Crypto.Cipher import AES
 import base64
+from .brom import *
 from base64 import b64encode
+from .Python1c import *
 
 @csrf_exempt 
 def upload_file(request):
@@ -190,7 +192,6 @@ def new_fun(pathToPhoto, photoName):
         decoded_objects = decode(img)
         for obj in decoded_objects:
             barcodeData = str(obj.data)
-    
     price_num_card = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[0])
     price_num_nocard = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[1])
     price_Type = str(PricePerNum(descriptionAnswer, priceRubNoCardAnswer, priceKopAnswer, priceKopNoCardAnswer, priceRubAnswer)[2])
@@ -201,8 +202,12 @@ def new_fun(pathToPhoto, photoName):
     #result = {'success': True, 'description': encrypt(descriptionAnswer), 'price11': encrypt(priceRubNoCardAnswer), 'price12': encrypt(priceKopAnswer), 'price21': encrypt(priceKopNoCardAnswer), 'price22': encrypt(priceRubAnswer), 'barcode_data': encrypt(data) }
     result = {'success': True, 'description': descriptionAnswer, 'price11': priceRubNoCardAnswer, 
     'price12': priceKopAnswer, 'price21': priceKopNoCardAnswer, 'price22': priceRubAnswer, 'barcode_data': barcodeData,
-    'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'type': price_Type, 'numType': numType }
+    'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'type': price_Type, 'numType': numType,
+    'price1c': 'None', 'description1c': 'None' }
     print(result)
+    result = take_barcodes(result)
+    print(result)
+    #result = take_barkodes(result)
     return result
 
 #шифрование
