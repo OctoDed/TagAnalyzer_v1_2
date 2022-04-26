@@ -15,7 +15,8 @@ import fastwer
 
 def clicked():  
     global url 
-    url = txt.get()
+    #url = txt.get()
+    url = 'http://a366-213-59-138-172.ngrok.io/upload'
     print(url)
 
 def ChosePicture():  
@@ -51,10 +52,11 @@ def magic():
     # + "\nКопейки по карте: " + returned_data.get("price12") 
     + "\nЦена по карте: " + returned_data.get("price22") + "." + returned_data.get("price12")
     + "\nЦена без карты: " + returned_data.get("price11") + "." + returned_data.get("price21")
-    + "\nЦена из базы данных 1с: " + returned_data.get("price1c")
+    + "\nЦена из базы данных 1с (без скидки): " + returned_data.get("price1c")
+    + "\nЦена из базы данных 1с (со скидкой): " + returned_data.get("price1cDiscount")
     
-    + "\nCER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c"), char_level=True))
-    + "\nWER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c")))
+    #+ "\nCER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c"), char_level=True))
+    #+ "\nWER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c")))
     
     # + "\nЦена за единицу по карте: " + returned_data.get("price_num_card") 
     # + "\nЦена за единицу без карты: " + returned_data.get("price_num_nocard") 

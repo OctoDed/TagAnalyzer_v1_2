@@ -203,7 +203,7 @@ def new_fun(pathToPhoto, photoName):
     result = {'success': True, 'description': descriptionAnswer, 'price11': priceRubNoCardAnswer, 
     'price12': priceKopAnswer, 'price21': priceKopNoCardAnswer, 'price22': priceRubAnswer, 'barcode_data': barcodeData,
     'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'type': price_Type, 'numType': numType,
-    'price1c': 'None', 'description1c': 'None' }
+    'price1c': 'None', 'description1c': 'None', 'price1cDiscount': 'None' }
     print(result)
     result = take_barcodes(result)
     print(result)
