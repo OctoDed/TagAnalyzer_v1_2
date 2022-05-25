@@ -2,6 +2,10 @@ package com.example.cameraxtest;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.pm.PackageManager;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.BackgroundColorSpan;
+import android.text.style.ForegroundColorSpan;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -65,10 +69,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private String[] permissions = new String[]{
-                Manifest.permission.INTERNET,
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA
+            Manifest.permission.INTERNET,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.CAMERA
     };
 
     private boolean checkPermissions() {
@@ -131,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         holder = surfaceView.getHolder();
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.addCallback(this);
+
     }
 
     /*
@@ -164,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         boxHeight = bottom - top; //2850
         boxWidth = right - left; //2850
         //Changing the value of x in diameter/x will change the size of the box ; inversely proportionate to x
-        canvas.drawRect(left, top, right, bottom, paint);
+            canvas.drawRect(left, top, right, bottom, paint);
         holder.unlockCanvasAndPost(canvas);
     }
     /*
@@ -179,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         //Drawing rectangle
         DrawFocusRect(Color.parseColor("#b3dabb"));
+
     }
 
     @Override
@@ -210,6 +216,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         ViewFlipper vf = (ViewFlipper) findViewById( R.id.viewFlipper );
         ImageView imageView = (ImageView) findViewById(R.id.image1);
         imageView.setImageBitmap(bitmap);
+        DrawFocusRect(Color.TRANSPARENT);
         vf.showNext();
     }
 
@@ -250,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                                        Response<JsonObject> response) {
                     Log.v("Upload", "success");
                     nDialog.dismiss();
+
                     //tw.setText(response.body().toString());
                     JsonObject result = response.body().getAsJsonObject();
                     String description = result.get("description").getAsString();
@@ -262,6 +270,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     String price_num_nocard = result.get("price_num_nocard").getAsString();
                     String Type = result.get("type").getAsString();
                     String numType = result.get("numType").getAsString();
+                    String price1c = result.get("price1c").getAsString();
+                    String description1c = result.get("description1c").getAsString();
+                    String price1cDiscount = result.get("price1cDiscount").getAsString();
+                    String Levi = result.get("Levi").getAsString();
                     /*
                     tw.setText("Описание: " + decrypt(description) + '\n' + "Цена без карты: " +
                             decrypt(price11) + '.' + decrypt(price21) + '\n' + "Цена по карте: " +
@@ -270,13 +282,29 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             decrypt(price_num_card) + '\n' + "Цена за ед, без карты: " +
                             decrypt(price_num_nocard) + '\n' + "Ед. измерения: " + decrypt(Type));
 */
-                    tw.setText("Описание: " + description + '\n' + "Цена без карты: " +
-                            price11 + '.' + price21 + '\n' + "Цена по карте: " +
-                            price22 + '.' + price12 + '\n' + "Штрих-код: " +
-                            barcode + '\n' + "Цена за ед, карта: " +
-                            price_num_card + '\n' + "Цена за ед, без карты: " +
-                            price_num_nocard + '\n' + "Ед. измерения: " + Type + '\n' +
-                            "Количество: " + numType);
+
+                    Spannable spans = new SpannableString("Описание: " + description + '\n' +
+                            "Цена без карты/по карте: " + price11 + '.' + price21 + '/' + price22 + '.' + price12 + '\n' +
+                            "Штрих-код: " + barcode + '\n' +
+                           // "Цена за ед, карта: " + price_num_card + '\n' + "Цена за ед, без карты: " + price_num_nocard + '\n' +
+                            "Ед. измерения: " + Type + ' ' + "Количество: " + numType +'\n'+
+                            "Описание из базы данных 1С: " + description1c + '\n' +
+                            "Цена из базы данных 1С со скидкой/без скидки: " + price1cDiscount + '/' + price1c + '\n'
+                            //"Расстояние Левенштейна: " + Levi
+                            );
+                    if (Integer.valueOf(Levi)>=80)
+                    {
+                        spans.setSpan(new ForegroundColorSpan(Color.GREEN), 10, 10 + description.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else if (Integer.valueOf(Levi)>=60)
+                    {
+                        spans.setSpan(new ForegroundColorSpan(Color.YELLOW), 10, 10 + description.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    else
+                    {
+                        spans.setSpan(new ForegroundColorSpan(Color.RED), 10, 10 + description.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
+                    tw.setText(spans);
                 }
                 @Override
                 public void onFailure(Call<JsonObject> call, Throwable t) {
@@ -292,27 +320,28 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             return;
         }
     }
-/*
-    public static String decrypt(String encryptedText) {
-        String decryptedText = "";
-        try {
-            Cipher cipher = Cipher.getInstance(cipherTransformation);
-            byte[] key = encryptionKey.getBytes(characterEncoding);
-            SecretKeySpec secretKey = new SecretKeySpec(key, aesEncryptionAlgorithem);
-            IvParameterSpec ivparameterspec = new IvParameterSpec(key);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivparameterspec);
-            Base64.Decoder decoder = Base64.getDecoder();
-            byte[] cipherText = decoder.decode(encryptedText.getBytes("UTF8"));
-            decryptedText = new String(cipher.doFinal(cipherText), "UTF-8");
-        } catch (Exception E) {
-            System.err.println("decrypt Exception : "+E.getMessage());
+    /*
+        public static String decrypt(String encryptedText) {
+            String decryptedText = "";
+            try {
+                Cipher cipher = Cipher.getInstance(cipherTransformation);
+                byte[] key = encryptionKey.getBytes(characterEncoding);
+                SecretKeySpec secretKey = new SecretKeySpec(key, aesEncryptionAlgorithem);
+                IvParameterSpec ivparameterspec = new IvParameterSpec(key);
+                cipher.init(Cipher.DECRYPT_MODE, secretKey, ivparameterspec);
+                Base64.Decoder decoder = Base64.getDecoder();
+                byte[] cipherText = decoder.decode(encryptedText.getBytes("UTF8"));
+                decryptedText = new String(cipher.doFinal(cipherText), "UTF-8");
+            } catch (Exception E) {
+                System.err.println("decrypt Exception : "+E.getMessage());
+            }
+            return decryptedText;
         }
-        return decryptedText;
-    }
-*/
+    */
     public void backing(View view) {
         ViewFlipper vf = (ViewFlipper) findViewById( R.id.viewFlipper );
-        vf.showNext();
+        DrawFocusRect(Color.parseColor("#b3dabb"));
+        vf.showPrevious();
     }
 
     private void saveImageToExternalStorage(Bitmap finalBitmap) {
