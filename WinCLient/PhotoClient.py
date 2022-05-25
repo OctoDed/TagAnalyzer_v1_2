@@ -10,10 +10,13 @@ from tkinter.filedialog import askopenfilename
 from PIL import ImageTk, Image
 from tkinter import filedialog
 
+import fastwer
+
 
 def clicked():  
     global url 
-    url = txt.get()
+    #url = txt.get()
+    url = 'http://a366-213-59-138-172.ngrok.io/upload'
     print(url)
 
 def ChosePicture():  
@@ -41,12 +44,31 @@ def magic():
     r = requests.post(url,  files=files)
     r.headers
     returned_data = r.json()
-    txt1.insert(INSERT, "Описание: " + returned_data.get("description") + "\nРубли без карты: " + returned_data.get("price11") +
-    "\nКопейки без карты: " + returned_data.get("price21") + 
-    "\nРубли по карте: " + returned_data.get("price22") + "\nКопейки по карте: " + returned_data.get("price12") +
-    "\nЦена за единицу по карте: " + returned_data.get("price_num_card") + "\nЦена за единицу без карты: " + returned_data.get("price_num_nocard") + 
-    "\nТип единицы: " + returned_data.get("type") + "\nЕдиницы вместе с ценой: " + returned_data.get("numType"))
+    txt1.insert(INSERT, "Описание: " + returned_data.get("description")
+    + "\nОписание из базы данных 1с: " + returned_data.get("description1c")
+    # + "\nРубли без карты: " + returned_data.get("price11") 
+    # + "\nКопейки без карты: " + returned_data.get("price21") 
+    # + "\nРубли по карте: " + returned_data.get("price22") 
+    # + "\nКопейки по карте: " + returned_data.get("price12") 
+    + "\nЦена по карте: " + returned_data.get("price22") + "." + returned_data.get("price12")
+    + "\nЦена без карты: " + returned_data.get("price11") + "." + returned_data.get("price21")
+    + "\nЦена из базы данных 1с (без скидки): " + returned_data.get("price1c")
+    + "\nЦена из базы данных 1с (со скидкой): " + returned_data.get("price1cDiscount")
     
+    #+ "\nCER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c"), char_level=True))
+    #+ "\nWER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c")))
+    
+    # + "\nЦена за единицу по карте: " + returned_data.get("price_num_card") 
+    # + "\nЦена за единицу без карты: " + returned_data.get("price_num_nocard") 
+    # + "\nТип единицы: " + returned_data.get("type") 
+    # + "\nЕдиницы вместе с ценой: " + returned_data.get("numType")
+    )
+    if returned_data.get("description1c")!='None':
+        txt1.insert(INSERT, "\nТочность описания: "
+        + "\nCER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c"), char_level=True))
+        + "\nWER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c")))
+        )
+
     #img1=PhotoImage(file='tmp.png')
     #picture = Label(window, image=img1)
     #picture.grid(column=2, row=5)
