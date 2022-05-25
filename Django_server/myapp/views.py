@@ -32,6 +32,8 @@ import base64
 from .brom import *
 from base64 import b64encode
 from .Python1c import *
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 
 @csrf_exempt 
 def upload_file(request):
@@ -72,7 +74,7 @@ def new_fun(pathToPhoto, photoName):
     photoForTraining = Image.open(pathToPhoto)
     width, height = photoForTraining.size
     os.system("./content/darknet/darknet detector test ./content/data/obj.data ./content/data/yolov4-tiny-3l.cfg " + 
-    "./content/data/backup/yolov4-tiny-3l_fine_tuned.weights " + '"' + pathToPhoto + '"' + " -dont_show -ext_output | tee pred.txt")
+    "./content/data/backup/yolov4-tiny-3l_best.weights " + '"' + pathToPhoto + '"' + " -dont_show -ext_output | tee pred.txt")
     predTxt = open("pred.txt", "r")
     lines = predTxt.readlines()
     predTxt.close()
@@ -94,6 +96,7 @@ def new_fun(pathToPhoto, photoName):
         if box['class'] == 'description': 
             x = 0
             w = img.shape[1]
+            h = h + 10
             #w = 511
         if box['class'] == 'barcode':
             x = x - 15
@@ -200,14 +203,13 @@ def new_fun(pathToPhoto, photoName):
     except (Exception):
         numType = 'None found'
     #result = {'success': True, 'description': encrypt(descriptionAnswer), 'price11': encrypt(priceRubNoCardAnswer), 'price12': encrypt(priceKopAnswer), 'price21': encrypt(priceKopNoCardAnswer), 'price22': encrypt(priceRubAnswer), 'barcode_data': encrypt(data) }
-    result = {'success': True, 'description': descriptionAnswer, 'price11': priceRubNoCardAnswer, 
+    result = {'success': False, 'description': descriptionAnswer, 'price11': priceRubNoCardAnswer, 
     'price12': priceKopAnswer, 'price21': priceKopNoCardAnswer, 'price22': priceRubAnswer, 'barcode_data': barcodeData,
     'price_num_card': price_num_card, 'price_num_nocard': price_num_nocard , 'type': price_Type, 'numType': numType,
-    'price1c': 'None', 'description1c': 'None', 'price1cDiscount': 'None' }
+    'price1c': 'None', 'description1c': 'None', 'price1cDiscount': 'None', 'Levi': 'None' }
+    result = take_barcodes(result) #вызов метода, для связи с базой данных 1С
+    result['Levi']=fuzz.WRatio(result['description'],result['description1c']) #вычисление расстояния Левенштейна
     print(result)
-    result = take_barcodes(result)
-    print(result)
-    #result = take_barkodes(result)
     return result
 
 #шифрование
@@ -233,7 +235,7 @@ def encrypt(message1):
 #вычисление цены за единицу
 def PricePerNum(descryption, price11, price12, price21, price22):
     #словарь для замены букв в предложении на похожие цифры
-    dictLetterToNum = {'O':0, 'S':5, 'Б':5, 'Z':2,'О':0,'б':6,'З':3, ' ': ''}
+    dictLetterToNum = {'O':0, 'S':5, 'Б':5, 'Z':2,'О':0,'б':6,'З':3, ' ': '', 'А':4, 'A':4 }
     prices_per_num = []
     #регулярка, которая ищет цену в названии товара, предварительно буквы заменяются на цифры в соответствии со словарём,
     #из названиря убираются все пробелы

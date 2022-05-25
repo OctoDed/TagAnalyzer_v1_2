@@ -9,14 +9,14 @@ from tkinter import scrolledtext
 from tkinter.filedialog import askopenfilename
 from PIL import ImageTk, Image
 from tkinter import filedialog
+import sys
 
 import fastwer
 
 
 def clicked():  
     global url 
-    #url = txt.get()
-    url = 'http://a366-213-59-138-172.ngrok.io/upload'
+    url = txt.get()
     print(url)
 
 def ChosePicture():  
@@ -54,6 +54,8 @@ def magic():
     + "\nЦена без карты: " + returned_data.get("price11") + "." + returned_data.get("price21")
     + "\nЦена из базы данных 1с (без скидки): " + returned_data.get("price1c")
     + "\nЦена из базы данных 1с (со скидкой): " + returned_data.get("price1cDiscount")
+    + "\nBarcode: " + returned_data.get("barcode_data")
+    
     
     #+ "\nCER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c"), char_level=True))
     #+ "\nWER: " + str(fastwer.score_sent(returned_data.get("description"), returned_data.get("description1c")))

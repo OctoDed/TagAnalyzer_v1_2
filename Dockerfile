@@ -30,4 +30,5 @@ RUN sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/c
 RUN apt-get update && sudo apt-get install -y nvidia-kernel-source-460
 RUN apt-get -y install cuda
 RUN pip3 install opencv-python-headless==4.5.4.60
-
+RUN pip3 install fuzzywuzzy
+RUN pip3 install python-Levenshtein

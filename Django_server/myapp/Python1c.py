@@ -2,6 +2,7 @@
 from .brom import *
 import json
 
+
 def take_barcodes(result):
     # Создаем клиент
     клиент = БромКлиент("http://192.168.1.15/InfoBase2", "Brom1","Brom1")
@@ -26,16 +27,8 @@ def take_barcodes(result):
         результат = текЗапрос.Выполнить()
         desciption1c = str(результат[0].Имя)
         for стр in результат:
-            # return print("Товар: {0}; Артикул: {1}".format(стр.Наименование, стр.Артикул))
-            #result['text']=[result['text'] , стр.Артикул]
             result['success']=True
-  #          print('test test test')
- #           result['price1c']=price1c
             result['description1c']=desciption1c
-#            result['price1cDiscount']=price1cDiscount
-
-    # for стр in результат:
-    #    print(результат[0].Имя, результат[0].Штрихкод1)
         
         текЗапрос = клиент.СоздатьЗапрос("""
         ВЫБРАТЬ
@@ -48,11 +41,7 @@ def take_barcodes(result):
         """)
         текЗапрос.УстановитьПараметр("Штрихкоды", результат[0].Ссылка)
         результат = текЗапрос.Выполнить()
-    # print(результат[0].Цена)
-        #price1c = str(результат[0].Цена)
-        #print(результат[0].ТипЦены)
         for стр in результат:
-         #   price1c = '5'
             print(стр.ТипЦены, стр.Цена)
             if str(стр.ТипЦены) == 'реальная':
                 price1c = str(стр.Цена)
@@ -60,37 +49,13 @@ def take_barcodes(result):
             if str(стр.ТипЦены) == 'скидка':
                 price1cDiscount = str(стр.Цена)
         
-        # # Создаем запрос
-        # текЗапрос = клиент.СоздатьЗапрос("""
-        #     ВЫБРАТЬ
-        #         Номенклатура.Ссылка КАК Ссылка,
-        #         Номенклатура.Наименование КАК Наименование,
-        #         Номенклатура.Артикул КАК Артикул
-        #     ИЗ
-        #         РегистрСведений.ШтрихкодыНоменклатуры КАК Штрихкодыном
-        #     ГДЕ
-        #         Штрихкодыном.Штрихкод = &Штрихкоды
-        # """)
-        # # Устанавливаем значение параметра запроса
-        # текЗапрос.УстановитьПараметр("Штрихкоды",result['barcode_data'])
-
-        # Выполняем запрос и выводим результат на экран
-        # результат = текЗапрос.Выполнить()
-        # print(результат[0].Наименование,результат[0].Артикул)
-        # print(результат)
-        #print("aaa")
-        #print(результат[0].Наименование)#, результат[0].Штрихкод1)
         for стр in результат:
-            # return print("Товар: {0}; Артикул: {1}".format(стр.Наименование, стр.Артикул))
-            #result['text']=[result['text'] , стр.Артикул]
             result['success']=True
-           # print('test test test')
             result['price1c']=price1c
-            #result['description1c']=desciption1c
             result['price1cDiscount']=price1cDiscount
-            #'price1c': 'None', 'description1c': 'None'
             return result
         result['success']=False
+
         return result
     except Exception:
         print(Exception)
